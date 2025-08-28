@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.use(
   cors({
-    origin: 'http://cctodo.netlify.app', // you can add your netlify url here later
+    origin: 'https://cctodo.netlify.app', // you can add your netlify url here later
     credentials: true,
   })
 );
@@ -104,3 +104,4 @@ app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
