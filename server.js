@@ -19,8 +19,6 @@ app.use(
 app.use(cors());
 app.use(bodyParser.json());
 
-app.get('/api/health', (req, res) => res.json({ status: "ok", ts: Date.now() }));
-
 // Middleware to protect routes
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -60,6 +58,14 @@ app.post('/api/auth/signin', (req, res) => {
 app.get('/api/tasks', authenticateToken, (req, res) => {
   const userTasks = tasks.filter(t => t.userId === req.user.id);
   res.json(userTasks);
+});
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Backend is running!",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.post('/api/tasks', authenticateToken, (req, res) => {
