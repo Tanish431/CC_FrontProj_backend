@@ -11,13 +11,20 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.use(
   cors({
-    origin: FRONTEND_URL, 
+    origin: 'http://cctodo.netlify.app', // you can add your netlify url here later
     credentials: true,
   })
 );
 
-app.use(cors());
 app.use(bodyParser.json());
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Backend is running!",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Middleware to protect routes
 const authenticateToken = (req, res, next) => {
@@ -60,14 +67,6 @@ app.get('/api/tasks', authenticateToken, (req, res) => {
   res.json(userTasks);
 });
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    message: "Backend is running!",
-    timestamp: new Date().toISOString(),
-  });
-});
-
 app.post('/api/tasks', authenticateToken, (req, res) => {
   const { title, due, status } = req.body;
   const newTask = {
@@ -105,5 +104,3 @@ app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
