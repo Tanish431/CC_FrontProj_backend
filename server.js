@@ -8,10 +8,10 @@ const { users, tasks } = require('./db');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = 'https://cctodo.netlify.app' || 'http://localhost:5173';
 app.use(
   cors({
-    origin: 'http://cctodo.netlify.app', // you can add your netlify url here later
+    origin: FRONTEND_URL, 
     credentials: true,
   })
 );
@@ -105,3 +105,4 @@ app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
