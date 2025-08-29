@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const { users, tasks } = require('./db');
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 app.use(
   cors({
-    origin: 'https://cctodo.netlify.app', // you can add your netlify url here later
+    origin: 'http://localhost:5173', // you can add your netlify url here later
     credentials: true,
   })
 );
@@ -42,18 +42,18 @@ const authenticateToken = (req, res, next) => {
 // Sign-up Route
 app.post('/api/auth/signup', (req, res) => {
   const { username, email, password } = req.body;
-  if (users.find(u => u.email === email)) {
+  if (db.users.find(u => u.email === email)) {
     return res.status(400).json({ message: 'User already exists' });
   }
   const newUser = { id: Date.now(), username, email, password };
-  users.push(newUser);
+  db.users.push(newUser);
   res.status(201).json({ message: 'User created successfully', user: { id: newUser.id, username, email } });
 });
 
 // Sign-in Route
 app.post('/api/auth/signin', (req, res) => {
   const { email, password } = req.body;
-  const user = users.find(u => u.email === email && u.password === password);
+  const user = db.users.find(u => u.email === email && u.password === password);
   if (!user) {
     return res.status(400).json({ message: 'Invalid credentials' });
   }
@@ -63,7 +63,7 @@ app.post('/api/auth/signin', (req, res) => {
 
 // Task routes (protected)
 app.get('/api/tasks', authenticateToken, (req, res) => {
-  const userTasks = tasks.filter(t => t.userId === req.user.id);
+  const userTasks = db.tasks.filter(t => t.userId === req.user.id);
   res.json(userTasks);
 });
 
@@ -76,26 +76,33 @@ app.post('/api/tasks', authenticateToken, (req, res) => {
     due,
     status,
   };
-  tasks.push(newTask);
+  db.tasks.push(newTask);
   res.status(201).json(newTask);
 });
 
 app.put('/api/tasks/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { title, due, status } = req.body;
-  const taskIndex = tasks.findIndex(t => t.id === id && t.userId === req.user.id);
+  const taskIndex = db.tasks.findIndex(t => t.id === id && t.userId === req.user.id);
   if (taskIndex === -1) {
     return res.status(404).json({ message: 'Task not found or unauthorized' });
-  }
-  tasks[taskIndex] = { ...tasks[taskIndex], title, due, status };
-  res.json(tasks[taskIndex]);
+  }  
+  db.tasks[taskIndex] = {
+    ...db.tasks[taskIndex],
+    ...(title !== undefined && { title }),
+    ...(due !== undefined && { due }),
+    ...(status !== undefined && { status }),
+  };
+  
+  res.json(db.tasks[taskIndex]);
 });
 
 app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
-  const initialLength = tasks.length;
-  tasks = tasks.filter(t => t.id !== id || t.userId !== req.user.id);
-  if (tasks.length === initialLength) {
+
+  const initialLength = db.tasks.length;
+  db.tasks = db.tasks.filter(t => t.id !== id || t.userId !== req.user.id);
+  if (db.tasks.length === initialLength) {
     return res.status(404).json({ message: 'Task not found or unauthorized' });
   }
   res.status(204).send();
@@ -104,4 +111,3 @@ app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
